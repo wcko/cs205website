@@ -1,0 +1,120 @@
+    What is the problem you are trying to solve with this application?
+    Describe your data in detail: where did it come from, how did you acquire it, what does it mean, etc.
+    Describe your program design and why you chose the features you did.
+    How do you use your application (mouse and keyboard functions, input/output, etc)?
+    What is the performance of your code? What speedup and efficiency did you achieve? What optimizations did you implement to achieve this speedup?
+    What interesting insights did you gain from this project?
+    What extensions and improvements can you suggest?
+    What did you most enjoy about working on this project? What was the most challenging aspect? What was the most frustrating? What would you do differently next time?
+
+
+About:
+Our raw data is available through the California Department of Transportation's Performance Measurement System (PeMS) (http://www.pems.dot.ca.gov). Real-time data is available through an approved account, along with historical data. Our real-time update script continually polls the PeMS servers for its 5 minute real-time data to both update our predictive model along with visualization of real-time data through Google Maps API.
+
+Our goal is to build a predictive model where given a set of input parameters including Weekend or Weekday (two distinct patterns as shown in Data Visualization [[hyperlink]]) and Time of Day, we output Occupancy, or the fraction of time a detector is triggered. In other words, this describes whether traffic is flowing or bumper-to-bumper.
+
+The program utilizes a set of python scripts to pre-process the raw data and extract our data of interest. We chose to gather stationID's (unique markers), Time of Day, Weekday or Weekend, and Occupancy.
+
+In order to build a predictive model for each station, we gather all the time and occupancy data <i>per detector</i> and perform a regression analysis to generate a predictive matrix (where each row corresponds to regression coefficients for each stationID). This step is parallel at the file distribution level, with Message Passing Interface to distribute the station files to CPUs for regression analysis. This could be further extended with CUDA to perform the individual regressions in parallel.
+
+With the predictive matrix in hand, our script's input parameters generate a timestamp vector. Matrix-vector multiplication produces a result of StationID and Occupancy. A metatdata file available from PeMS allows for a relational join of stationID's to latitude and longitudes necessary for geolocation in Google Fusion Maps API.
+
+
+
+
+
+The Regressions:
+Discuss the equation's and maths.
+Model
+
+
+4. Polynomial Regression
+To address the nonlinearity, mean-differences, and heterosekdasticity between
+different locations in our prediction model, we choose a polynomial GLM regression. We
+choose time of day to be the explanatory variable, and interact this with (1) location and (2)
+a ‘weekday or weekend’ dummy. These choices give us the following model form:
+
+5. Model
+
+More specifically:
+*(Location i)*(WeekDay) + *(Location i)*(WeekEnd) +
+*(Location j)*(WeekDay) +
+*(Location j)*(WeekEnd) + …
+
+Where Traffic is normalized as
+is the hour of the day (0 24)
+(Location i) is a dummy that takes value 1 if the observation is for Location i.
+WeekDay/Weekend is a dummy
+
+ð As such, our prediction function has a number of terms equal to the number of
+polynomial terms we select (0-based including a constant) * the number of locations * 2
+(for our weekend/weekday dummy). In this case, this leaves us with
+
+6. Initial GLM Regression Algorithm Parallelization:
+Following the analysis above, our regression model is over 60,000 terms long (i.e. we need to
+solve for 60,000+ regression coefficients). However, we can solve for each metaterm *(Location
+i)*(WeekDay) separately. In other words, we can solve each metaterm of the following form
+independently from others:
+
+= *(Location i)*(WeekDay)
+
+Because all regressions of this type are independent from one another, they are embarrassingly
+parallel. Our final traffic model is simply the sum of the outputs of each of roughly independent
+regression.
+
+
+
+Prediction Gallery:
+images.
+
+
+Results and Discussion:
+[Visuals of Graphs] -- same graphs in the video
+
+Key Data Insights:
+(1) Time seems to be a good predictor of daily and weekly traffic.
+(2) The relationship between time and traffic is highly nonlinear & periodic in days and
+weeks.
+(4) Weekend days have obviously different traffic patterns than weekdays.
+(3) While stations appear to follow similar patterns over time, some experience much
+more traffic, more variance in traffic, or both compared to others.
+
+
+[GRAPHS & PREDICTED EQUATIONS VERIFICATION] --- images of the graphs in adam's email.
+After we have generated our regressions, we have verified the equation by plotting against the observed data. We see that the equation fits accordingly.
+
+
+Our script that downloads real-time data also appends new observations to the existing files that are used in regression analysis. ***BENEFIT OF THIS: ADAM WRITE HERE***
+
+
+***WRITE THIS PART -- LESSONS LEARNED FROM PROJECT, WHAT WAS COOL, WHAT WAS NOT---
+This project was a challenging, yet rewarding exercise in applying the parallel computational techniques we have learned in order to analyze "big data".
+
+Frustrating aspects: this is an immature field, and so not well documented and required much thought and dedication (and a fair bit of luck). Yet this is also why it is exciting --- leading edge techniques, this stuff hasn't been done before for social science, we have innovated new tools, and hope to expand the field.
+***
+
+
+
+
+
+
+
+
+Future Work:
+We would like to improve the user interface so that the user may interact with our scripts via the website. Currently we must specify time arguments through terminal script. Future designs would allow online users to predict traffic based on a desired day and time location using web input and plot automatically.
+
+For research purposes, we would like to incorporate a real-time web scrape of other likely
+confounding covariates (historical weather and the weather forecast, for instance), and
+automatically incorporate these into our polynomial GLM regression. We would also like to
+experiment with scripts to perform alternative modeling methods (box splines, coarsening with
+linear regression) and then plot the resulting predictions/error terms side-by-side using real-time
+data. Using our skeleton code, this should simply be a matter of adding a few lines of linear
+algebra in the Regress_Weekday.py and Regress_Weekend.py scripts.
+On the coding side, we would love to get PyCULA working reliably on the cluster, such
+that we can replace our numpy functions with our own PyCUDA matrix-vector multiplication
+kernel and the PyCULA kernels necessary to complete our regressions even faster using GPU
+computing.
+
+
+
+  
