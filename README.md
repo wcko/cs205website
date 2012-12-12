@@ -1,7 +1,7 @@
 Here's a README for the CS205 website.
 Initial page starts at home.html
 
-HOME
+HOME (home.html)
 Data (data.html)
 Regression Model (regression.html)
 Predicted Traffic (predicted.html)
