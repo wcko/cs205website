@@ -36,21 +36,54 @@
       <div class="well sidebar-nav">
       <ul class = "nav nav-list"
         <li class="nav-header">Navigate</li>
-          <li class="active">
-          <a href="home.html">Home</a>
+          <li><a href="home.html">Home</a></li>
+          <li><a href="data.html">Data</a></li>
+          <li><a href="regression.html">Regression Model</a></li>
           <li><a href="predicted.html">Predicted Traffic</a></li>
-          <a href="realtime.html">Live Traffic</a></li>
-          <li><a href="about.html">About the Dream Team</a></li>
+          <li><a href="realtime.html">Live Traffic</a></li>
+          <li class="active">
+          <a href="results.html">Results and Discussion</a></li>
+          <li><a href="future.html">Future Work</a></li>
+          <li><a href="about.html">About Us</a></li>
       </ul>
     </div>
     </div>
     <div class="span9">
-          <div class="hero-unit">
-            <h1>Machine Learning:<br>A Predictive Traffic Model</h1><!-- Real title: Big Data, Big MPImpin' -->
-            <p> We use parallel processing computational techniques to analyze the "big data" of 1 billion geo-referenced observations of traffic recorded by the thousands of traffic detectors in downtown Los Angeles over long time frames. Using the message passing interface (MPI) to distribute processing tasks, we've created an efficient and robust software package to model and predict the the traffic in Los Angeles for any given time period. With real-time traffic updates, the model continually "learns" and regenerates based on a real-time data stream. <br><br>
-Explore our site to find traffic in real time, or to see a prediction we've made.</p>
-            <p><FORM action="video.html"><INPUT type=submit value="Learn More"></FORM></p>
-          </div>
+      <!--Body content-->
+          <h1>Results and Discussion</h1>
+          <p>
+          <h4>Polynomial Regression</h4>
+To address the <b>nonlinearity</b>, <b>mean-differences</b>, and <b>heteroskdasticity</b> between
+different locations in our prediction model, we choose a <b>polynomial GLM regression</b>. We
+choose time of day to be the explanatory variable, and interact this with (1) location and (2)
+a <i>weekday</i> or <i>weekend</i> dummy. These choices give us the following model form:
+<br>
+<img src = "images/equation.jpg">
+<br>
+Where:
+<ul>
+<li>Traffic is normalized as the &#35; of cars per minute / road capacity per minute
+<li>
+&tau; is the hour of the day (0 &le; &tau; &ge; 24)
+<li>
+(Location i) is a dummy &isin; (0,1) that takes value 1 if the observation is for Location i.
+<li>
+WeekDay/Weekend is a dummy &isin; (0,1)
+</ul>
+As such, our prediction function has a number of terms equal to the number of
+polynomial terms we select (0-based including a constant) * the number of locations * 2
+(for our weekend/weekday dummy).
+<br>
+<br>
+<h4>Initial GLM Regression Algorithm Parallelization:</h4> 
+Following the analysis above, our regression model is over 60,000 terms long (i.e. we need to
+solve for 60,000+ regression coefficients). However, we can solve for each metaterm *(Location
+i)*(WeekDay) separately. In other words, we can solve each metaterm of the following form
+independently from others:
+<br>
+<p class="lead"> Traffic(Location<sub>i</sub>, WeekDAY=1) = (&Beta;<sub>0</sub> + &Beta;<sub>1</sub>&tau; + &Beta;<sub>2</sub>&tau;<sup>2</sup> + ... + &Beta;<sub>N</sub>&tau;<sup>N</sup>)&#42;(Location<sub>i</sub>)&#42;(WeekDAY)</p>
+Because all regressions of this type are independent from one another, they are embarrassingly parallel. <i>Our final traffic model is simply the sum of the outputs of each of roughly independent regresion</i>.      
+         
           <script src="http://code.jquery.com/jquery-latest.js"></script>
           <script src="js/bootstrap.min.js"></script>
     </div>
