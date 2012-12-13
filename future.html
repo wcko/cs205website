@@ -51,38 +51,19 @@
       <!--Body content-->
           <h1>Future Work</h1>
           <p>
-          <h4>Polynomial Regression</h4>
-To address the <b>nonlinearity</b>, <b>mean-differences</b>, and <b>heteroskdasticity</b> between
-different locations in our prediction model, we choose a <b>polynomial GLM regression</b>. We
-choose time of day to be the explanatory variable, and interact this with (1) location and (2)
-a <i>weekday</i> or <i>weekend</i> dummy. These choices give us the following model form:
-<br>
-<img src = "images/equation.jpg">
-<br>
-Where:
-<ul>
-<li>Traffic is normalized as the &#35; of cars per minute / road capacity per minute
-<li>
-&tau; is the hour of the day (0 &le; &tau; &ge; 24)
-<li>
-(Location i) is a dummy &isin; (0,1) that takes value 1 if the observation is for Location i.
-<li>
-WeekDay/Weekend is a dummy &isin; (0,1)
-</ul>
-As such, our prediction function has a number of terms equal to the number of
-polynomial terms we select (0-based including a constant) * the number of locations * 2
-(for our weekend/weekday dummy).
-<br>
-<br>
-<h4>Initial GLM Regression Algorithm Parallelization:</h4> 
-Following the analysis above, our regression model is over 60,000 terms long (i.e. we need to
-solve for 60,000+ regression coefficients). However, we can solve for each metaterm *(Location
-i)*(WeekDay) separately. In other words, we can solve each metaterm of the following form
-independently from others:
-<br>
-<p class="lead"> Traffic(Location<sub>i</sub>, WeekDAY=1) = (&Beta;<sub>0</sub> + &Beta;<sub>1</sub>&tau; + &Beta;<sub>2</sub>&tau;<sup>2</sup> + ... + &Beta;<sub>N</sub>&tau;<sup>N</sup>)&#42;(Location<sub>i</sub>)&#42;(WeekDAY)</p>
-Because all regressions of this type are independent from one another, they are embarrassingly parallel. <i>Our final traffic model is simply the sum of the outputs of each of roughly independent regresion</i>.      
-         
+We would like to improve the user interface so that the user may interact with our scripts via the website. Currently we must specify time arguments through terminal script. Future designs would allow online users to predict traffic based on a desired day and time location using web input and plot automatically.
+<br><br>
+For research purposes, we would like to incorporate a real-time web scrape of other likely
+confounding covariates (historical weather and the weather forecast, for instance), and
+automatically incorporate these into our polynomial GLM regression.
+<br><br>
+We would also like to
+experiment with scripts to perform alternative modeling methods (box splines, coarsening with linear regression) and then plot the resulting predictions/error terms side-by-side using real-time data. Using our skeleton code, this should simply be a matter of adding a few lines of linear algebra in the Regress_Weekday.py and Regress_Weekend.py scripts.
+<br><br>
+On the coding side, we would love to get PyCULA working reliably on the cluster, such
+that we can replace our numpy functions with our own PyCUDA matrix-vector multiplication
+kernel and the PyCULA kernels necessary to complete our regressions even faster using GPU
+computing.</p>
           <script src="http://code.jquery.com/jquery-latest.js"></script>
           <script src="js/bootstrap.min.js"></script>
     </div>
